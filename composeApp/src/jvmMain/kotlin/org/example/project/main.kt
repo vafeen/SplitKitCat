@@ -4,7 +4,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import org.example.project.data.di.KoinDataModule
-import org.example.project.domain.FileProcessor
+import org.example.project.domain.services.FileSplitter
 import org.example.project.ui.App
 import org.example.project.ui.main_screen.MainScreenModule
 import org.koin.core.context.startKoin
@@ -24,7 +24,7 @@ fun main() {
     }
     application {
         LaunchedEffect(null) {
-            val fileProcessor: FileProcessor = getKoin().get()
+            val fileSplitter: FileSplitter = getKoin().get()
 //            fileProcessor.sha256sum("")
         }
         Window(

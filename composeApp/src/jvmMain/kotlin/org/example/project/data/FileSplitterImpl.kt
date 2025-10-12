@@ -1,16 +1,16 @@
 package org.example.project.data
 
-import org.example.project.domain.FileProcessor
+import org.example.project.domain.services.FileSplitter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.MessageDigest
 
 /**
- * Реализация интерфейса [FileProcessor] для обработки файлов.
- * @see FileProcessor
+ * Реализация интерфейса [FileSplitter] для обработки файлов.
+ * @see FileSplitter
  */
-internal class FileProcessorImpl : FileProcessor {
+internal class FileSplitterImpl : FileSplitter {
     /**
      * Вычисляет контрольную сумму SHA-256 для указанного файла.
      *

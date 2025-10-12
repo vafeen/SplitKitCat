@@ -9,44 +9,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.darkrockstudios.libraries.mpfilepicker.FilePicker
 import org.koin.java.KoinJavaComponent.getKoin
 
 
 @Composable
 internal fun MainScreen() {
-    val vm = remember { getKoin().get<MainViewModel>() }
-    var selectedFilePath by remember { mutableStateOf<String?>(null) }
-
-    var showFilePicker by remember { mutableStateOf(false) }
-
-    val fileType = listOf("jpg", "png")
-    FilePicker(
-        show = showFilePicker,
-        fileExtensions = fileType,
-        title = null
-    ) { platformFile ->
-        showFilePicker = false
-        // do something with the file
-    }
-
+    val viewModel = remember { getKoin().get<MainViewModel>() }
+    val files by viewModel.files.collectAsState()
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Button(onClick = { showFilePicker = true }) {
+        Button(onClick = {
+            viewModel.showFilePicker()
+        }) {
             Text("Выбрать файл")
         }
         Spacer(modifier = Modifier.height(20.dp))
-        Text("Выбранный файл: ${selectedFilePath ?: "файл не выбран"}")
+        Text("Выбранный файл: ${files.joinToString()}")
     }
 
 }
