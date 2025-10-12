@@ -21,7 +21,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin)
-            implementation("com.darkrockstudios:mpfilepicker:3.1.0")
+            implementation("io.github.vinceglb:filekit-dialogs-compose:0.12.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
