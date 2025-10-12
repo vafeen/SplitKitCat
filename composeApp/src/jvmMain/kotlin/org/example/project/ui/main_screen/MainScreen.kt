@@ -16,9 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.darkrockstudios.libraries.mpfilepicker.FilePicker
 import org.koin.java.KoinJavaComponent.getKoin
-import java.awt.FileDialog
-import java.awt.Frame
 
 
 @Composable
@@ -26,14 +25,16 @@ internal fun MainScreen() {
     val vm = remember { getKoin().get<MainViewModel>() }
     var selectedFilePath by remember { mutableStateOf<String?>(null) }
 
-    fun openFilePicker() {
-        val fileDialog = FileDialog(Frame(), "Choose a file", FileDialog.LOAD)
-        fileDialog.isVisible = true
-        val file = fileDialog.file
-        val dir = fileDialog.directory
-        if (file != null && dir != null) {
-            selectedFilePath = "$dir==$file"
-        }
+    var showFilePicker by remember { mutableStateOf(false) }
+
+    val fileType = listOf("jpg", "png")
+    FilePicker(
+        show = showFilePicker,
+        fileExtensions = fileType,
+        title = null
+    ) { platformFile ->
+        showFilePicker = false
+        // do something with the file
     }
 
     Column(
@@ -41,7 +42,7 @@ internal fun MainScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Button(onClick = { openFilePicker() }) {
+        Button(onClick = { showFilePicker = true }) {
             Text("Выбрать файл")
         }
         Spacer(modifier = Modifier.height(20.dp))
