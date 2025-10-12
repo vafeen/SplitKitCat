@@ -10,11 +10,9 @@ import org.example.project.ui.main_screen.MainScreenModule
 import org.koin.core.context.startKoin
 import org.koin.java.KoinJavaComponent.getKoin
 
-//fun main() {
-//    splitFile("./files/KotlinProject.zip", outputDirPath = "./files",50*1024)
-//    catFiles("./files", "./files", "KotlinProject.zip")
-//}
-
+/**
+ * Главная точка входа в приложение.
+ */
 fun main() {
     startKoin {
         modules(

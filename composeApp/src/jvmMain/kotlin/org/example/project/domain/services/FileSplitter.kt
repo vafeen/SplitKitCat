@@ -19,8 +19,13 @@ internal interface FileSplitter {
      * @param inputFilePath Путь к исходному файлу, который нужно разбить.
      * @param outputDirPath Путь к директории, куда будут сохранены части файла.
      * @param chunkSize Размер каждой части в байтах.
+     * // возвращает список имен частей файлов
      */
-    fun splitFile(inputFilePath: String, outputDirPath: String, chunkSize: Int)
+    suspend fun splitFile(
+        inputFilePath: String,
+        outputDirPath: String,
+        chunkSize: Int
+    ): List<String>
 
     /**
      * Объединяет части файла обратно в один целый файл.

@@ -36,9 +36,14 @@ internal class FileSplitterImpl : FileSplitter {
      * @param outputDirPath Путь к директории, куда будут сохранены части файла.
      * @param chunkSize Размер каждой части в байтах.
      */
-    override fun splitFile(inputFilePath: String, outputDirPath: String, chunkSize: Int) {
+    override suspend fun splitFile(
+        inputFilePath: String,
+        outputDirPath: String,
+        chunkSize: Int
+    ): List<String> {
         val inputFile = File(inputFilePath)
         val outputDir = File(outputDirPath)
+        val parts = mutableListOf<String>()
 
         if (!outputDir.exists()) {
             outputDir.mkdirs()
@@ -50,13 +55,17 @@ internal class FileSplitterImpl : FileSplitter {
             var bytesRead: Int
 
             while (inputStream.read(buffer).also { bytesRead = it } > 0) {
-                val partFile = File(outputDir, "${inputFile.name}_part$partNumber")
+                val partFile = File(
+                    outputDir,
+                    "${inputFile.name}_part$partNumber"
+                ).also { parts.add(it.absolutePath) }
                 FileOutputStream(partFile).use { outputStream ->
                     outputStream.write(buffer, 0, bytesRead)
                 }
                 partNumber++
             }
         }
+        return parts
     }
 
     /**
