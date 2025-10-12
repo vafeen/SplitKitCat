@@ -32,6 +32,13 @@ import org.koin.java.KoinJavaComponent.getKoin
 import splitkitcat.composeapp.generated.resources.Res
 import splitkitcat.composeapp.generated.resources.done
 
+/**
+ * Главный экран приложения.
+ * Отображает пользовательский интерфейс для разделения и объединения файлов,
+ * управляется с помощью [MainViewModel].
+ * @see MainViewModel
+ * @see MainState
+ */
 @Composable
 internal fun MainScreen() {
     val viewModel = remember { getKoin().get<MainViewModel>() }

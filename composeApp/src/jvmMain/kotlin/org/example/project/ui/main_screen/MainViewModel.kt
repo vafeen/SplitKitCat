@@ -12,13 +12,30 @@ import org.example.project.domain.services.ConfigHandler
 import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
 
+/**
+ * ViewModel для главного экрана, управляющая состоянием и взаимодействием с пользователем.
+ *
+ * @property fileSplitter Сервис для разделения файлов.
+ * @property filePeeker Сервис для выбора файлов.
+ * @property configHandler Сервис для работы с файлами конфигурации.
+ */
 internal class MainViewModel(
     private val fileSplitter: FileSplitter,
     private val filePeeker: FilePeeker,
     private val configHandler: ConfigHandler
 ) : ViewModel() {
     private val _state = MutableStateFlow<MainState>(MainState.Splitting())
+
+    /**
+     * Поток состояния для главного экрана, за которым следит UI.
+     */
     val state = _state.asStateFlow()
+
+    /**
+     * Обрабатывает намерения, поступающие от UI.
+     *
+     * @param intent Намерение для обработки.
+     */
     fun handleIntent(intent: MainIntent) {
         viewModelScope.launch(Dispatchers.IO) {
             when (intent) {
@@ -31,6 +48,9 @@ internal class MainViewModel(
         }
     }
 
+    /**
+     * Выполняет разделение файла на части на основе текущего состояния.
+     */
     private suspend fun split() {
         val state = _state.value as MainState.Splitting
         val file = state.file
@@ -58,6 +78,9 @@ internal class MainViewModel(
         }
     }
 
+    /**
+     * Открывает диалог выбора файла и обновляет состояние выбранным файлом.
+     */
     private suspend fun selectFileForSplitting() {
         val file = filePeeker.peekFileForSplitting() ?: return
         _state.update {
@@ -65,10 +88,20 @@ internal class MainViewModel(
         }
     }
 
+    /**
+     * Устанавливает видимость меню выбора единиц измерения размера.
+     *
+     * @param isVisible true, если меню должно быть видимо, иначе false.
+     */
     private fun setSizeUnitPeekingMenuVisible(isVisible: Boolean) = _state.update {
         (it as MainState.Splitting).copy(isSizeUnitPeekingMenuVisible = isVisible)
     }
 
+    /**
+     * Устанавливает размер для разделения файла из строки.
+     *
+     * @param sizeStr Строка с размером.
+     */
     private fun setSizeForSplitting(sizeStr: String) {
         _state.update {
             val size = sizeStr.toIntOrNull()
@@ -80,6 +113,11 @@ internal class MainViewModel(
         }
     }
 
+    /**
+     * Устанавливает единицу измерения размера для разделения файла.
+     *
+     * @param sizeUnit Единица измерения размера.
+     */
     private fun setSizeUnitForSplitting(sizeUnit: SizeUnit) = _state.update {
         (it as MainState.Splitting).copy(
             sizeUnit = sizeUnit,

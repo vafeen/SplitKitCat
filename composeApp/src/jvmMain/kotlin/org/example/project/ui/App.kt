@@ -8,7 +8,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 //import splitkitcat.composeapp.generated.resources.Res
 //import splitkitcat.composeapp.generated.resources.compose_multiplatform
 
-
+/**
+ * Главный Composable-компонент приложения.
+ * Устанавливает [MaterialTheme] и отображает [MainScreen].
+ */
 @Composable
 @Preview
 fun App() {

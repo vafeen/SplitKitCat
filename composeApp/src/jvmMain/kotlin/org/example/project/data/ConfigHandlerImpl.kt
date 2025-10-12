@@ -12,9 +12,19 @@ import org.example.project.domain.services.ConfigHandler
 import org.example.project.domain.services.FileSplitter
 import java.io.File
 
+/**
+ * Реализация интерфейса [ConfigHandler] для работы с файлами конфигурации.
+ * @property fileSplitter Сервис для работы с файлами, используется для вычисления хеша.
+ * @see ConfigHandler
+ */
 internal class ConfigHandlerImpl(
     private val fileSplitter: FileSplitter,
 ) : ConfigHandler {
+    /**
+     * Асинхронно считывает конфигурацию из файла, выбранного пользователем.
+     *
+     * @return Объект [Config] или null, если чтение не удалось или пользователь отменил выбор.
+     */
     override suspend fun readConfig(): Config? {
         val configFile = FileKit.openFilePicker(
             mode = FileKitMode.Single,
@@ -26,6 +36,13 @@ internal class ConfigHandlerImpl(
         }.getOrNull()
     }
 
+    /**
+     * Асинхронно записывает конфигурацию в файл, выбранный пользователем.
+     *
+     * @param mainFileName Имя основного файла.
+     * @param fileParts Список имен частей файла.
+     * @return `true`, если запись прошла успешно, иначе `false`.
+     */
     override suspend fun writeConfig(
         mainFileName: String,
         fileParts: List<String>,
@@ -44,6 +61,12 @@ internal class ConfigHandlerImpl(
         return true
     }
 
+    /**
+     * Считывает файл и создает для него объект [Config.File] с хешем.
+     *
+     * @param fileName Имя файла для обработки.
+     * @return Объект [Config.File].
+     */
     private fun readFileAndCreateConfigFile(fileName: String): Config.File {
         val hash = fileSplitter.sha256sum(fileName)
         return Config.File(name = File(fileName).name, hash = hash)

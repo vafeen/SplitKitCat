@@ -20,6 +20,12 @@ internal enum class SizeUnit {
     }
 }
 
+/**
+ * Разбивает размер в байтах на более крупные единицы измерения (ГБ, МБ, КБ, байты).
+ *
+ * @param sizeInBytes Размер в байтах для преобразования.
+ * @return Список пар, где каждая пара содержит значение и соответствующую единицу измерения.
+ */
 internal fun splitSizeToUnits(sizeInBytes: Long): List<Pair<Long, SizeUnit>> {
     var remainder = sizeInBytes
     val gigabytes = remainder / (1024 * 1024 * 1024)
@@ -38,6 +44,5 @@ internal fun splitSizeToUnits(sizeInBytes: Long): List<Pair<Long, SizeUnit>> {
         Pair(megabytes, SizeUnit.Megabytes),
         Pair(kilobytes, SizeUnit.KiloBytes),
         Pair(bytes, SizeUnit.Bytes)
-    )
+    ).filter { it.first > 0 }
 }
-
