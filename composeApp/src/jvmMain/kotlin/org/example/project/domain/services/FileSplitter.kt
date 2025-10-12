@@ -1,10 +1,10 @@
-package org.example.project.domain
+package org.example.project.domain.services
 
 /**
  * Интерфейс для обработки файлов, включая вычисление контрольных сумм,
  * разделение и объединение файлов.
  */
-internal interface FileProcessor {
+internal interface FileSplitter {
     /**
      * Вычисляет контрольную сумму SHA-256 для указанного файла.
      *
