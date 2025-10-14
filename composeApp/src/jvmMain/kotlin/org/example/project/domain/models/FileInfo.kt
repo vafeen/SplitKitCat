@@ -1,20 +1,16 @@
 package org.example.project.domain.models
 
+import java.io.File
+
 /**
  * Представляет информацию о файле.
  *
  * @property name Имя файла.
- * @property pathToFile Путь к директории, в которой находится файл.
+ * @property file Объект файла.
  * @property size Размер файла в байтах.
  */
 internal data class FileInfo(
     val name: String,
-    val pathToFile: String,
+    val file: File,
     val size: Long,
-) {
-    /**
-     * Полный путь к файлу, включая имя файла.
-     */
-    val fileWithPath: String
-        get() = "$pathToFile\\$name"
-}
+) 

@@ -7,6 +7,21 @@ import org.example.project.domain.models.SizeUnit
  */
 internal sealed interface MainIntent {
     /**
+     * Намерение переключиться на режим объединения файлов.
+     */
+    data object SelectCatting : MainIntent
+
+    /**
+     * Намерение переключиться на режим разделения файлов.
+     */
+    data object SelectSplitting : MainIntent
+
+    /**
+     * Намерение выбрать файл конфигурации для объединения.
+     */
+    data object SelectConfigForCatting : MainIntent
+
+    /**
      * Намерение установить размер для разделения файла.
      * @property sizeStr Строка с размером.
      */
@@ -33,4 +48,14 @@ internal sealed interface MainIntent {
      * Намерение запустить процесс разделения файла.
      */
     data object Split : MainIntent
+
+    /**
+     * Намерение запустить процесс объединения файлов.
+     */
+    data object Cat : MainIntent
+
+    /**
+     * Намерение проверить файлы в конфигурации.
+     */
+    data object CheckFilesInConfig : MainIntent
 }

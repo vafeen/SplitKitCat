@@ -1,10 +1,5 @@
 package org.example.project.data
 
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.dialogs.FileKitMode
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.example.project.domain.models.Config
@@ -21,54 +16,39 @@ internal class ConfigHandlerImpl(
     private val fileSplitter: FileSplitter,
 ) : ConfigHandler {
     /**
-     * Асинхронно считывает конфигурацию из файла, выбранного пользователем.
+     * Асинхронно считывает конфигурацию из указанного файла.
      *
-     * @return Объект [Config] или null, если чтение не удалось или пользователь отменил выбор.
+     * @param file Файл конфигурации для чтения.
+     * @return Объект [Config] или null, если чтение не удалось.
      */
-    override suspend fun readConfig(): Config? {
-        val configFile = FileKit.openFilePicker(
-            mode = FileKitMode.Single,
-            type = FileKitType.File(extensions = setOf(Config.Extension))
-        ) ?: return null
-        val content = configFile.file.readText()
-        return runCatching {
-            Json.decodeFromString<Config>(content)
+    override suspend fun readConfig(file: File): Config? = runCatching {
+        Json.decodeFromString<Config>(file.readText())
         }.getOrNull()
-    }
 
     /**
-     * Асинхронно записывает конфигурацию в файл, выбранный пользователем.
+     * Асинхронно записывает конфигурацию в указанный файл.
      *
-     * @param mainFileName Имя основного файла.
-     * @param fileParts Список имен частей файла.
+     * @param file Файл для записи конфигурации.
+     * @param mainFile Основной файл, который был разделен.
+     * @param fileParts Список частей файла.
      * @return `true`, если запись прошла успешно, иначе `false`.
      */
-    override suspend fun writeConfig(
-        mainFileName: String,
-        fileParts: List<String>,
-    ): Boolean {
-
-        val fileToSaveConfig = FileKit.openFileSaver(
-            suggestedName = "${File(mainFileName).nameWithoutExtension}.${Config.Extension}",
-            extension = Config.Extension
-        )?.file ?: return false
-        val mainFile = readFileAndCreateConfigFile(mainFileName)
-        println()
+    override suspend fun writeConfig(file: File, mainFile: File, fileParts: List<File>): Boolean {
+        val mainFileConfig = readFileAndCreateConfigFile(mainFile)
         val parts = fileParts.map { readFileAndCreateConfigFile(it) }
-        val config = Config(mainFile = mainFile, parts = parts)
+        val config = Config(mainFile = mainFileConfig, parts = parts)
         val jsonString = Json.encodeToString(config)
-        fileToSaveConfig.writeText(jsonString)
+        file.createNewFile()
+        file.writeText(jsonString)
         return true
     }
 
     /**
      * Считывает файл и создает для него объект [Config.File] с хешем.
      *
-     * @param fileName Имя файла для обработки.
+     * @param file Файл для обработки.
      * @return Объект [Config.File].
      */
-    private fun readFileAndCreateConfigFile(fileName: String): Config.File {
-        val hash = fileSplitter.sha256sum(fileName)
-        return Config.File(name = File(fileName).name, hash = hash)
-    }
+    private fun readFileAndCreateConfigFile(file: File): Config.File =
+        Config.File(name = file.name, hash = fileSplitter.sha256sum(file))
 }
