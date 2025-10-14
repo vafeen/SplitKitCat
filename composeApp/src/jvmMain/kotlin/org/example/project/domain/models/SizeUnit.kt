@@ -1,5 +1,8 @@
 package org.example.project.domain.models
 
+/**
+ * Единицы измерения размера файла.
+ */
 internal enum class SizeUnit {
     Bytes,
     KiloBytes,

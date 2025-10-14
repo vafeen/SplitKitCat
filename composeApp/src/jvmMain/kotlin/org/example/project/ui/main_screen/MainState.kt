@@ -43,6 +43,10 @@ internal sealed class MainState {
      * Состояние для объединения файлов.
      *
      * @property config Конфигурация для объединения.
+     * @property configFile Файл конфигурации.
+     * @property foundParts Карта, показывающая, найдены ли части файла.
+     * @property hashIsTrue Карта, показывающая, совпадают ли хеши частей файла.
+     * @property isLoading true, если идет процесс объединения.
      */
     data class Catting(
         val config: Config? = null,

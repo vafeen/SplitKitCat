@@ -16,25 +16,27 @@ internal class ConfigHandlerImpl(
     private val fileSplitter: FileSplitter,
 ) : ConfigHandler {
     /**
-     * Асинхронно считывает конфигурацию из файла, выбранного пользователем.
+     * Асинхронно считывает конфигурацию из указанного файла.
      *
-     * @return Объект [Config] или null, если чтение не удалось или пользователь отменил выбор.
+     * @param file Файл конфигурации для чтения.
+     * @return Объект [Config] или null, если чтение не удалось.
      */
     override suspend fun readConfig(file: File): Config? = runCatching {
         Json.decodeFromString<Config>(file.readText())
         }.getOrNull()
 
     /**
-     * Асинхронно записывает конфигурацию в файл, выбранный пользователем.
+     * Асинхронно записывает конфигурацию в указанный файл.
      *
-     * @param mainFileName Имя основного файла.
-     * @param fileParts Список имен частей файла.
+     * @param file Файл для записи конфигурации.
+     * @param mainFile Основной файл, который был разделен.
+     * @param fileParts Список частей файла.
      * @return `true`, если запись прошла успешно, иначе `false`.
      */
     override suspend fun writeConfig(file: File, mainFile: File, fileParts: List<File>): Boolean {
-        val mainFile = readFileAndCreateConfigFile(mainFile)
+        val mainFileConfig = readFileAndCreateConfigFile(mainFile)
         val parts = fileParts.map { readFileAndCreateConfigFile(it) }
-        val config = Config(mainFile = mainFile, parts = parts)
+        val config = Config(mainFile = mainFileConfig, parts = parts)
         val jsonString = Json.encodeToString(config)
         file.createNewFile()
         file.writeText(jsonString)
@@ -44,7 +46,7 @@ internal class ConfigHandlerImpl(
     /**
      * Считывает файл и создает для него объект [Config.File] с хешем.
      *
-     * @param fileName Имя файла для обработки.
+     * @param file Файл для обработки.
      * @return Объект [Config.File].
      */
     private fun readFileAndCreateConfigFile(file: File): Config.File =

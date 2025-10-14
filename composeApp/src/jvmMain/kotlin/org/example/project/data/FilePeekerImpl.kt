@@ -17,9 +17,9 @@ import org.example.project.domain.services.FilePeeker
  */
 internal class FilePeekerImpl : FilePeeker {
     /**
-     * Открывает системный диалог для выбора одного или нескольких файлов с расширением .kt.
+     * Открывает системный диалог для выбора одного файла.
      *
-     * @return Список объектов [FileInfo], представляющих выбранные файлы, или null, если выбор был отменен.
+     * @return Объект [FileInfo], представляющий выбранный файл, или null, если выбор был отменен.
      */
     override suspend fun peekFile(): FileInfo? = FileKit.openFilePicker(
         mode = FileKitMode.Single,
@@ -27,6 +27,11 @@ internal class FilePeekerImpl : FilePeeker {
         FileInfo(name = it.name, file = it.file, size = it.size())
     }
 
+    /**
+     * Открывает системный диалог для выбора файла конфигурации.
+     *
+     * @return Объект [FileInfo], представляющий выбранный файл конфигурации, или null, если выбор был отменен.
+     */
     override suspend fun peekConfig(): FileInfo? = FileKit.openFilePicker(
         mode = FileKitMode.Single,
         type = FileKitType.File(extension = Config.Extension)
@@ -34,6 +39,13 @@ internal class FilePeekerImpl : FilePeeker {
         FileInfo(name = it.name, file = it.file, size = it.size())
     }
 
+    /**
+     * Открывает системный диалог для сохранения файла.
+     *
+     * @param suggestedName Предлагаемое имя для сохраняемого файла.
+     * @param extension Предлагаемое расширение для сохраняемого файла.
+     * @return Объект [FileInfo], представляющий место для сохранения файла, или null, если выбор был отменен.
+     */
     override suspend fun peekFileForSaving(
         suggestedName: String,
         extension: String?,

@@ -10,6 +10,7 @@ internal interface ConfigHandler {
     /**
      * Асинхронно считывает конфигурацию из файла.
      *
+     * @param file Файл конфигурации.
      * @return Объект [Config] или null, если чтение не удалось.
      */
     suspend fun readConfig(file: File): Config?
@@ -17,8 +18,9 @@ internal interface ConfigHandler {
     /**
      * Асинхронно записывает конфигурацию в файл.
      *
-     * @param mainFileName Имя основного файла.
-     * @param fileParts Список имен частей файла.
+     * @param file Файл для записи конфигурации.
+     * @param mainFile Основной файл.
+     * @param fileParts Список частей файла.
      * @return `true`, если запись прошла успешно, иначе `false`.
      */
     suspend fun writeConfig(

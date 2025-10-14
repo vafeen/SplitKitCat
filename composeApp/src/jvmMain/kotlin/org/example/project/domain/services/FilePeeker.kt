@@ -3,16 +3,30 @@ package org.example.project.domain.services
 import org.example.project.domain.models.FileInfo
 
 /**
- * Интерфейс для предварительного просмотра файлов в файловой системе.
+ * Интерфейс для выбора файлов в файловой системе.
  */
 internal interface FilePeeker {
     /**
-     * Асинхронно получает список файлов для предварительного просмотра.
+     * Асинхронно открывает диалог для выбора одного файла.
      *
-     * @return Список объектов [FileInfo], представляющих доступные файлы, или null, если произошла ошибка.
+     * @return [FileInfo] выбранного файла или null, если выбор был отменен.
      */
     suspend fun peekFile(): FileInfo?
+
+    /**
+     * Асинхронно открывает диалог для выбора файла конфигурации.
+     *
+     * @return [FileInfo] выбранного файла конфигурации или null, если выбор был отменен.
+     */
     suspend fun peekConfig(): FileInfo?
+
+    /**
+     * Асинхронно открывает диалог для сохранения файла.
+     *
+     * @param suggestedName Предлагаемое имя файла.
+     * @param extension Предлагаемое расширение файла.
+     * @return [FileInfo] для сохранения файла или null, если выбор был отменен.
+     */
     suspend fun peekFileForSaving(
         suggestedName: String,
         extension: String?,

@@ -18,7 +18,7 @@ import java.io.File
 /**
  * ViewModel для главного экрана, управляющая состоянием и взаимодействием с пользователем.
  *
- * @property fileSplitter Сервис для разделения файлов.
+ * @property fileSplitter Сервис для разделения и объединения файлов.
  * @property filePeeker Сервис для выбора файлов.
  * @property configHandler Сервис для работы с файлами конфигурации.
  */
@@ -56,7 +56,9 @@ internal class MainViewModel(
         }
     }
 
-
+    /**
+     * Выполняет объединение файлов на основе выбранной конфигурации.
+     */
     private suspend fun cat() {
         val state = _state.value as? MainState.Catting ?: return
         val config = state.config ?: return
@@ -75,6 +77,9 @@ internal class MainViewModel(
         _state.update { state.copy(isLoading = false) }
     }
 
+    /**
+     * Открывает диалог выбора файла конфигурации и считывает его.
+     */
     private suspend fun selectConfigForCatting() {
         val configFile = filePeeker.peekConfig() ?: return
         val config = configHandler.readConfig(configFile.file) ?: return // TODO(add showing error)
@@ -88,6 +93,9 @@ internal class MainViewModel(
         checkFilesInConfig()
     }
 
+    /**
+     * Проверяет наличие и целостность файлов-частей, указанных в конфигурации.
+     */
     private suspend fun checkFilesInConfig() {
         var state = _state.value as? MainState.Catting ?: return
         val config = state.config ?: return
@@ -121,10 +129,16 @@ internal class MainViewModel(
         _state.update { state.copy(isLoading = false) }
     }
 
+    /**
+     * Переключает состояние на объединение файлов.
+     */
     private fun selectCatting() = _state.update {
         MainState.Catting()
     }
 
+    /**
+     * Переключает состояние на разделение файлов.
+     */
     private fun selectSplitting() = _state.update {
         MainState.Splitting()
     }
@@ -164,7 +178,7 @@ internal class MainViewModel(
     }
 
     /**
-     * Открывает диалог выбора файла и обновляет состояние выбранным файлом.
+     * Открывает диалог выбора файла для разделения и обновляет состояние.
      */
     private suspend fun selectFileForSplitting() {
         val file = filePeeker.peekFile() ?: return
@@ -191,9 +205,9 @@ internal class MainViewModel(
      */
     private fun setSizeForSplitting(sizeStr: String) {
         _state.update {
-            val size = sizeStr.toIntOrNull()
+            val size = sizeStr.toLongOrNull()
             if (it is MainState.Splitting)
-                it.copy(sizeStr = sizeStr, size = size ?: 0, sizeIsError = size == null)
+                it.copy(sizeStr = sizeStr, size = size, sizeIsError = size == null)
             else it
         }
     }

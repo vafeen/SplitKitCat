@@ -14,8 +14,9 @@ internal class FileSplitterImpl() : FileSplitter {
     /**
      * Вычисляет контрольную сумму SHA-256 для указанного файла.
      *
-     * @param filepath Путь к файлу, для которого необходимо вычислить контрольную сумму.
+     * @param file Файл, для которого необходимо вычислить контрольную сумму.
      * @return Строковое представление контрольной суммы SHA-256 в шестнадцатеричном формате.
+     * @throws Exception если файл не существует.
      */
     override fun sha256sum(file: File): String {
         if (!file.exists()) throw Exception("File ${file.name} is not exists in FileSplitterImpl.sha256sum")
@@ -33,9 +34,10 @@ internal class FileSplitterImpl() : FileSplitter {
     /**
      * Разбивает файл на несколько частей заданного размера.
      *
-     * @param inputFilePath Путь к исходному файлу, который нужно разбить.
+     * @param inputFile Исходный файл, который нужно разбить.
      * @param outputDirPath Путь к директории, куда будут сохранены части файла.
      * @param chunkSize Размер каждой части в байтах.
+     * @return Список созданных файлов-частей.
      */
     override suspend fun splitFile(
         inputFile: File,
@@ -70,7 +72,9 @@ internal class FileSplitterImpl() : FileSplitter {
 
     /**
      * Объединяет части файла обратно в один целый файл.
-
+     *
+     * @param partsDir Директория, содержащая части файла.
+     * @param outputFile Файл, в который будут объединены части.
      * @param baseFileName Исходное имя файла, которое использовалось для создания частей.
      */
     override suspend fun catFiles(
@@ -92,7 +96,13 @@ internal class FileSplitterImpl() : FileSplitter {
         }
     }
 
+    /**
+     * Компаньон-объект для [FileSplitterImpl].
+     */
     companion object {
+        /**
+         * Постфикс для имен файлов-частей.
+         */
         private const val APP_PART_POSTFIX = "_kit-cat-part"
     }
 

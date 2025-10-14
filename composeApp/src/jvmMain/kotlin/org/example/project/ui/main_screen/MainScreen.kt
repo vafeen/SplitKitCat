@@ -73,15 +73,15 @@ internal fun MainScreen() {
             }
 
         }
-        when (state) {
+        when (val s = state) {
             MainState.Empty -> {}
             is MainState.Catting -> Catting(
-                state as MainState.Catting,
+                s,
                 viewModel::handleIntent
             )
 
             is MainState.Splitting -> Splitting(
-                state as MainState.Splitting,
+                s,
                 viewModel::handleIntent
             )
 
@@ -90,6 +90,12 @@ internal fun MainScreen() {
 
 }
 
+/**
+ * Composable-функция для отображения экрана объединения файлов.
+ *
+ * @param state Текущее состояние экрана объединения.
+ * @param sendIntent Функция для отправки намерений в [MainViewModel].
+ */
 @Composable
 internal fun Catting(
     state: MainState.Catting,
@@ -139,6 +145,13 @@ internal fun Catting(
     }
 }
 
+/**
+ * Composable-функция для отображения информации о файле.
+ *
+ * @param file Информация о файле.
+ * @param found `true`, если файл найден, `false`, если нет, и `null`, если проверка не проводилась.
+ * @param hashIsTrue `true`, если хеш файла верен, `false`, если нет, и `null`, если проверка не проводилась.
+ */
 @Composable
 internal fun File(file: Config.File, found: Boolean? = null, hashIsTrue: Boolean? = null) {
     Row(
@@ -181,6 +194,12 @@ internal fun File(file: Config.File, found: Boolean? = null, hashIsTrue: Boolean
     }
 }
 
+/**
+ * Composable-функция для отображения экрана разделения файлов.
+ *
+ * @param state Текущее состояние экрана разделения.
+ * @param sendIntent Функция для отправки намерений в [MainViewModel].
+ */
 @Composable
 internal fun Splitting(
     state: MainState.Splitting,
