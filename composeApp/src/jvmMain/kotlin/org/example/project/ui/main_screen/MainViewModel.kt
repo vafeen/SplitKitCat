@@ -3,6 +3,7 @@ package org.example.project.ui.main_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -59,7 +60,19 @@ internal class MainViewModel(
     private suspend fun cat() {
         val state = _state.value as? MainState.Catting ?: return
         val config = state.config ?: return
-        fileSplitter.catFiles(config.mainFile.name)
+        val configFile = state.configFile ?: return
+        val mainFile = config.mainFile
+        _state.update { state.copy(isLoading = true) }
+        val outputFile = filePeeker.peekFileForSaving(
+            suggestedName = config.mainFile.name,
+            extension = File(mainFile.name).extension
+        )?.file ?: return
+        delay(2000)
+        fileSplitter.catFiles(
+            partsDir = File(configFile.parent),
+            outputFile = outputFile, baseFileName = mainFile.name
+        )
+        _state.update { state.copy(isLoading = false) }
     }
 
     private suspend fun selectConfigForCatting() {
@@ -75,24 +88,37 @@ internal class MainViewModel(
         checkFilesInConfig()
     }
 
-    private fun checkFilesInConfig() {
-        val state = _state.value as? MainState.Catting ?: return
+    private suspend fun checkFilesInConfig() {
+        var state = _state.value as? MainState.Catting ?: return
         val config = state.config ?: return
         val directory = state.configFile?.parent ?: return
 
         val parts = config.parts.toMutableList()
-        _state.update {
-            if (it is MainState.Catting) it.copy(foundPartsHash = mapOf()) else it
-        }
+
+        state = state.copy(foundParts = mapOf(), hashIsTrue = mapOf(), isLoading = true)
+        _state.update { state }
         parts.forEach { partFile ->
-            _state.update {
-                if (it is MainState.Catting) it.copy(
-                    foundPartsHash = it.foundPartsHash.plus(
-                        partFile.hash to File(directory, partFile.name).exists()
-                    )
-                ) else it
-            }
+            val fileSystemFile = File(directory, partFile.name)
+            val exists = fileSystemFile.exists()
+            state = state.copy(
+                foundParts = state.foundParts.plus(
+                    partFile.hash to exists
+                )
+            )
+            _state.update { state }
+            delay(500)
+            state = state.copy(
+                hashIsTrue = state.hashIsTrue.plus(
+                    partFile.hash to if (exists) partFile.hash == fileSplitter.sha256sum(
+                        fileSystemFile
+                    ) else false
+                )
+            )
+            _state.update { state }
+
         }
+//        delay(5000)
+        _state.update { state.copy(isLoading = false) }
     }
 
     private fun selectCatting() = _state.update {

@@ -1,6 +1,5 @@
 package org.example.project.data
 
-import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
 import java.io.File
 import java.io.FileInputStream
@@ -11,9 +10,7 @@ import java.security.MessageDigest
  * Реализация интерфейса [FileSplitter] для обработки файлов.
  * @see FileSplitter
  */
-internal class FileSplitterImpl(
-    private val filePeeker: FilePeeker,
-) : FileSplitter {
+internal class FileSplitterImpl() : FileSplitter {
     /**
      * Вычисляет контрольную сумму SHA-256 для указанного файла.
      *
@@ -21,6 +18,7 @@ internal class FileSplitterImpl(
      * @return Строковое представление контрольной суммы SHA-256 в шестнадцатеричном формате.
      */
     override fun sha256sum(file: File): String {
+        if (!file.exists()) throw Exception("File ${file.name} is not exists in FileSplitterImpl.sha256sum")
         val digest = MessageDigest.getInstance("SHA-256")
         FileInputStream(file).use { fis ->
             val buffer = ByteArray(1024 * 8)
@@ -75,15 +73,11 @@ internal class FileSplitterImpl(
 
      * @param baseFileName Исходное имя файла, которое использовалось для создания частей.
      */
-    override suspend fun catFiles(baseFileName: String) {
-        val outputFile = filePeeker.peekFileForSaving(
-            suggestedName = baseFileName,
-            extension = File(baseFileName).extension
-        )?.file ?: return
-
-
-        val partsDir = File(outputFile.parent)
-
+    override suspend fun catFiles(
+        partsDir: File,
+        outputFile: File,
+        baseFileName: String
+    ) {
         val partFiles = partsDir.listFiles { _, name ->
             name.startsWith(baseFileName) &&
                     name.contains(APP_PART_POSTFIX)

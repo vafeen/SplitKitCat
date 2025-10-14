@@ -34,5 +34,9 @@ internal interface FileSplitter {
      *
      * @param baseFileName Исходное имя файла, которое использовалось для создания частей.
      */
-    suspend fun catFiles(baseFileName: String)
+    suspend fun catFiles(
+        partsDir: File,
+        outputFile: File,
+        baseFileName: String
+    )
 }

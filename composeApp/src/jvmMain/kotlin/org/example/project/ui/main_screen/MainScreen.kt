@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.project.domain.models.Config
@@ -105,21 +106,33 @@ internal fun Catting(
             Button(onClick = { sendIntent(MainIntent.CheckFilesInConfig) }) {
                 Text("check files in config")
             }
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                item {
-                    File(config.mainFile)
-                    Spacer(modifier = Modifier.height(10.dp))
+            Box(modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().alpha(if (state.isLoading) 0.5f else 1.0f)
+                ) {
+                    item {
+                        File(config.mainFile)
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                    items(config.parts) {
+                        File(
+                            it,
+                            found = state.foundParts[it.hash] == true,
+                            hashIsTrue = state.hashIsTrue[it.hash] == true
+                        )
+                    }
                 }
-                items(config.parts) {
-                    File(it, found = state.foundPartsHash[it.hash] == true)
+                if (state.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(50.dp))
                 }
             }
+
         }
         Button(onClick = { sendIntent(MainIntent.SelectConfigForCatting) }) {
             Text("select config")
         }
         Button(
-            enabled = state.config != null && !state.foundPartsHash.values.contains(false),
+            enabled = state.config != null && !state.foundParts.values.contains(false) && !state.isLoading,
             onClick = { sendIntent(MainIntent.Cat) }) {
             Text("cat files")
         }
@@ -127,13 +140,32 @@ internal fun Catting(
 }
 
 @Composable
-internal fun File(file: Config.File, found: Boolean? = null) {
-    Row {
-        if (found != null) {
-            when (found) {
-                true -> "Найден" to Color.Green
-                false -> "Не найден" to Color.Red
-            }.let {
+internal fun File(file: Config.File, found: Boolean? = null, hashIsTrue: Boolean? = null) {
+    Row(
+        modifier = Modifier
+            .border(BorderStroke(2.dp, Color.Black))
+            .padding(10.dp)
+    ) {
+        Column {
+            if (found != null) {
+                when (found) {
+                    true -> "Найден" to Color.Green
+                    false -> "Не найден" to Color.Red
+                }.let {
+                    Text(
+                        modifier = Modifier
+                            .border(BorderStroke(2.dp, it.second))
+                            .padding(5.dp),
+                        text = it.first
+                    )
+                }
+            }
+            when {
+                found == false -> "hash отсутствует" to Color.Black
+                hashIsTrue == true -> "hash верен" to Color.Green
+                hashIsTrue == false -> "hash неверен" to Color.Red
+                else -> null
+            }?.let {
                 Text(
                     modifier = Modifier
                         .border(BorderStroke(2.dp, it.second))
@@ -142,11 +174,7 @@ internal fun File(file: Config.File, found: Boolean? = null) {
                 )
             }
         }
-        Column(
-            modifier = Modifier
-                .border(BorderStroke(2.dp, Color.Black))
-                .padding(10.dp)
-        ) {
+        Column {
             Text(file.name)
             Text(file.hash)
         }

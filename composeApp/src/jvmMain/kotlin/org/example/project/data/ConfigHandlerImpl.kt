@@ -20,12 +20,9 @@ internal class ConfigHandlerImpl(
      *
      * @return Объект [Config] или null, если чтение не удалось или пользователь отменил выбор.
      */
-    override suspend fun readConfig(file: File): Config? {
-        val content = file.readText()
-        return runCatching {
-            Json.decodeFromString<Config>(content)
+    override suspend fun readConfig(file: File): Config? = runCatching {
+        Json.decodeFromString<Config>(file.readText())
         }.getOrNull()
-    }
 
     /**
      * Асинхронно записывает конфигурацию в файл, выбранный пользователем.
@@ -35,20 +32,7 @@ internal class ConfigHandlerImpl(
      * @return `true`, если запись прошла успешно, иначе `false`.
      */
     override suspend fun writeConfig(file: File, mainFile: File, fileParts: List<File>): Boolean {
-        println(
-            "\n\n" +
-                    "$file\n" +
-                    "$mainFile\n" +
-                    "$fileParts\n" +
-                    "\n\n"
-        )
-//
-//        val fileToSaveConfig = FileKit.openFileSaver(
-//            suggestedName = "${File(mainFileName).nameWithoutExtension}.${Config.Extension}",
-//            extension = Config.Extension
-//        )?.file ?: return false
         val mainFile = readFileAndCreateConfigFile(mainFile)
-        println()
         val parts = fileParts.map { readFileAndCreateConfigFile(it) }
         val config = Config(mainFile = mainFile, parts = parts)
         val jsonString = Json.encodeToString(config)
@@ -63,8 +47,6 @@ internal class ConfigHandlerImpl(
      * @param fileName Имя файла для обработки.
      * @return Объект [Config.File].
      */
-    private fun readFileAndCreateConfigFile(file: File): Config.File {
-        val hash = fileSplitter.sha256sum(file)
-        return Config.File(name = file.name, hash = hash)
-    }
+    private fun readFileAndCreateConfigFile(file: File): Config.File =
+        Config.File(name = file.name, hash = fileSplitter.sha256sum(file))
 }

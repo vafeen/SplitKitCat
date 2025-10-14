@@ -47,6 +47,8 @@ internal sealed class MainState {
     data class Catting(
         val config: Config? = null,
         val configFile: File? = null,
-        val foundPartsHash: Map<String, Boolean> = mapOf()
+        val foundParts: Map<String, Boolean> = mapOf(),
+        val hashIsTrue: Map<String, Boolean> = mapOf(),
+        val isLoading: Boolean = false,
     ) : MainState()
 }
