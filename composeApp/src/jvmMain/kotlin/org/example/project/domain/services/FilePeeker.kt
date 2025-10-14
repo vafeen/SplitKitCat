@@ -11,5 +11,10 @@ internal interface FilePeeker {
      *
      * @return Список объектов [FileInfo], представляющих доступные файлы, или null, если произошла ошибка.
      */
-    suspend fun peekFileForSplitting(): FileInfo?
+    suspend fun peekFile(): FileInfo?
+    suspend fun peekConfig(): FileInfo?
+    suspend fun peekFileForSaving(
+        suggestedName: String,
+        extension: String?,
+    ): FileInfo?
 }

@@ -1,6 +1,7 @@
 package org.example.project.domain.services
 
 import org.example.project.domain.models.Config
+import java.io.File
 
 /**
  * Интерфейс для работы с файлами конфигурации.
@@ -11,7 +12,7 @@ internal interface ConfigHandler {
      *
      * @return Объект [Config] или null, если чтение не удалось.
      */
-    suspend fun readConfig(): Config?
+    suspend fun readConfig(file: File): Config?
 
     /**
      * Асинхронно записывает конфигурацию в файл.
@@ -21,7 +22,8 @@ internal interface ConfigHandler {
      * @return `true`, если запись прошла успешно, иначе `false`.
      */
     suspend fun writeConfig(
-        mainFileName: String,
-        fileParts: List<String>,
+        file: File,
+        mainFile: File,
+        fileParts: List<File>,
     ): Boolean
 }

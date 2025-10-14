@@ -1,5 +1,7 @@
 package org.example.project.domain.services
 
+import java.io.File
+
 /**
  * Интерфейс для обработки файлов, включая вычисление контрольных сумм,
  * разделение и объединение файлов.
@@ -11,7 +13,7 @@ internal interface FileSplitter {
      * @param filepath Путь к файлу, для которого необходимо вычислить контрольную сумму.
      * @return Строковое представление контрольной суммы SHA-256 в шестнадцатеричном формате.
      */
-    fun sha256sum(filepath: String): String
+    fun sha256sum(file: File): String
 
     /**
      * Разбивает файл на несколько частей заданного размера.
@@ -22,17 +24,15 @@ internal interface FileSplitter {
      * // возвращает список имен частей файлов
      */
     suspend fun splitFile(
-        inputFilePath: String,
+        inputFile: File,
         outputDirPath: String,
         chunkSize: Int
-    ): List<String>
+    ): List<File>
 
     /**
      * Объединяет части файла обратно в один целый файл.
      *
-     * @param outputFilePath Путь к директории для сохранения итогового файла.
-     * @param partsDirPath Путь к директории, содержащей части файла.
      * @param baseFileName Исходное имя файла, которое использовалось для создания частей.
      */
-    fun catFiles(outputFilePath: String, partsDirPath: String, baseFileName: String)
+    suspend fun catFiles(baseFileName: String)
 }

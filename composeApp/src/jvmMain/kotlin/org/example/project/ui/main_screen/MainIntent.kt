@@ -6,6 +6,10 @@ import org.example.project.domain.models.SizeUnit
  * Представляет намерения пользователя на главном экране.
  */
 internal sealed interface MainIntent {
+    data object SelectCatting : MainIntent
+    data object SelectSplitting : MainIntent
+    data object SelectConfigForCatting : MainIntent
+
     /**
      * Намерение установить размер для разделения файла.
      * @property sizeStr Строка с размером.
@@ -33,4 +37,6 @@ internal sealed interface MainIntent {
      * Намерение запустить процесс разделения файла.
      */
     data object Split : MainIntent
+    data object Cat : MainIntent
+    data object CheckFilesInConfig : MainIntent
 }
