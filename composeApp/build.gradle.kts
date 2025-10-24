@@ -42,6 +42,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            modules("jdk.security.auth")
             packageName = "SplitKitCat"
             packageVersion = "1.0.0"
         }
