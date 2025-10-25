@@ -3,19 +3,22 @@ package org.example.project.ui.main_screen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.example.project.domain.models.Config
 import org.example.project.domain.models.SizeUnit
 import org.example.project.domain.services.ConfigHandler
 import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
+import java.io.File
 
 /**
  * ViewModel для главного экрана, управляющая состоянием и взаимодействием с пользователем.
  *
- * @property fileSplitter Сервис для разделения файлов.
+ * @property fileSplitter Сервис для разделения и объединения файлов.
  * @property filePeeker Сервис для выбора файлов.
  * @property configHandler Сервис для работы с файлами конфигурации.
  */
@@ -44,8 +47,100 @@ internal class MainViewModel(
                 is MainIntent.SetSizeUnitPeekingMenuVisible -> setSizeUnitPeekingMenuVisible(intent.isVisible)
                 MainIntent.SelectFileForSplitting -> selectFileForSplitting()
                 MainIntent.Split -> split()
+                MainIntent.SelectCatting -> selectCatting()
+                MainIntent.SelectSplitting -> selectSplitting()
+                MainIntent.SelectConfigForCatting -> selectConfigForCatting()
+                MainIntent.Cat -> cat()
+                MainIntent.CheckFilesInConfig -> checkFilesInConfig()
             }
         }
+    }
+
+    /**
+     * Выполняет объединение файлов на основе выбранной конфигурации.
+     */
+    private suspend fun cat() {
+        val state = _state.value as? MainState.Catting ?: return
+        val config = state.config ?: return
+        val configFile = state.configFile ?: return
+        val mainFile = config.mainFile
+        _state.update { state.copy(isLoading = true) }
+        val outputFile = filePeeker.peekFileForSaving(
+            suggestedName = config.mainFile.name,
+            extension = File(mainFile.name).extension
+        )?.file ?: return
+        delay(2000)
+        fileSplitter.catFiles(
+            partsDir = File(configFile.parent),
+            outputFile = outputFile, baseFileName = mainFile.name
+        )
+        _state.update { state.copy(isLoading = false) }
+    }
+
+    /**
+     * Открывает диалог выбора файла конфигурации и считывает его.
+     */
+    private suspend fun selectConfigForCatting() {
+        val configFile = filePeeker.peekConfig() ?: return
+        val config = configHandler.readConfig(configFile.file) ?: return // TODO(add showing error)
+
+        _state.update {
+            if (it is MainState.Catting) it.copy(
+                config = config,
+                configFile = configFile.file
+            ) else it
+        }
+        checkFilesInConfig()
+    }
+
+    /**
+     * Проверяет наличие и целостность файлов-частей, указанных в конфигурации.
+     */
+    private suspend fun checkFilesInConfig() {
+        var state = _state.value as? MainState.Catting ?: return
+        val config = state.config ?: return
+        val directory = state.configFile?.parent ?: return
+
+        val parts = config.parts.toMutableList()
+
+        state = state.copy(foundParts = mapOf(), hashIsTrue = mapOf(), isLoading = true)
+        _state.update { state }
+        parts.forEach { partFile ->
+            val fileSystemFile = File(directory, partFile.name)
+            val exists = fileSystemFile.exists()
+            state = state.copy(
+                foundParts = state.foundParts.plus(
+                    partFile.hash to exists
+                )
+            )
+            _state.update { state }
+            delay(500)
+            state = state.copy(
+                hashIsTrue = state.hashIsTrue.plus(
+                    partFile.hash to if (exists) partFile.hash == fileSplitter.sha256sum(
+                        fileSystemFile
+                    ) else false
+                )
+            )
+            _state.update { state }
+
+        }
+//        delay(5000)
+        _state.update { state.copy(isLoading = false) }
+    }
+
+    /**
+     * Переключает состояние на объединение файлов.
+     */
+    private fun selectCatting() = _state.update {
+        MainState.Catting()
+    }
+
+    /**
+     * Переключает состояние на разделение файлов.
+     */
+    private fun selectSplitting() = _state.update {
+        MainState.Splitting()
     }
 
     /**
@@ -53,38 +148,42 @@ internal class MainViewModel(
      */
     private suspend fun split() {
         val state = _state.value as MainState.Splitting
-        val file = state.file
+        val fileForSplitting = state.fileForSplitting
         val size = state.size
         val sizeUnit = state.sizeUnit
-        if (file != null && size != null) {
+        if (fileForSplitting != null && size != null) {
             _state.update {
-                (it as MainState.Splitting)
-                    .copy(isLoading = true)
+                if (it is MainState.Splitting) it.copy(isLoading = true) else it
             }
+            val configFileForSaving = filePeeker.peekFileForSaving(
+                suggestedName = fileForSplitting.file.nameWithoutExtension,
+                extension = Config.Extension
+            ) ?: return
             val partFileNames = fileSplitter.splitFile(
-                file.fileWithPath,
-                outputDirPath = file.pathToFile,
+                inputFile = fileForSplitting.file,
+                outputDirPath = configFileForSaving.file.parent,
                 chunkSize = sizeUnit.toBytes(size)
             )
+
             configHandler.writeConfig(
-                mainFileName = file.fileWithPath,
+                file = configFileForSaving.file,
+                mainFile = fileForSplitting.file,
                 fileParts = partFileNames,
             )
 //            delay(5000)
             _state.update {
-                (it as MainState.Splitting)
-                    .copy(isLoading = false)
+                if (it is MainState.Splitting) it.copy(isLoading = false) else it
             }
         }
     }
 
     /**
-     * Открывает диалог выбора файла и обновляет состояние выбранным файлом.
+     * Открывает диалог выбора файла для разделения и обновляет состояние.
      */
     private suspend fun selectFileForSplitting() {
-        val file = filePeeker.peekFileForSplitting() ?: return
+        val file = filePeeker.peekFile() ?: return
         _state.update {
-            (it as MainState.Splitting).copy(file = file)
+            if (it is MainState.Splitting) it.copy(fileForSplitting = file) else it
         }
     }
 
@@ -94,7 +193,9 @@ internal class MainViewModel(
      * @param isVisible true, если меню должно быть видимо, иначе false.
      */
     private fun setSizeUnitPeekingMenuVisible(isVisible: Boolean) = _state.update {
-        (it as MainState.Splitting).copy(isSizeUnitPeekingMenuVisible = isVisible)
+        if (it is MainState.Splitting)
+            it.copy(isSizeUnitPeekingMenuVisible = isVisible)
+        else it
     }
 
     /**
@@ -105,11 +206,9 @@ internal class MainViewModel(
     private fun setSizeForSplitting(sizeStr: String) {
         _state.update {
             val size = sizeStr.toIntOrNull()
-            (it as MainState.Splitting).copy(
-                sizeStr = sizeStr,
-                size = size ?: 0,
-                sizeIsError = size == null
-            )
+            if (it is MainState.Splitting)
+                it.copy(sizeStr = sizeStr, size = size, sizeIsError = size == null)
+            else it
         }
     }
 
@@ -119,10 +218,9 @@ internal class MainViewModel(
      * @param sizeUnit Единица измерения размера.
      */
     private fun setSizeUnitForSplitting(sizeUnit: SizeUnit) = _state.update {
-        (it as MainState.Splitting).copy(
-            sizeUnit = sizeUnit,
-            isSizeUnitPeekingMenuVisible = false
-        )
+        if (it is MainState.Splitting)
+            it.copy(sizeUnit = sizeUnit, isSizeUnitPeekingMenuVisible = false)
+        else it
     }
 
 }
