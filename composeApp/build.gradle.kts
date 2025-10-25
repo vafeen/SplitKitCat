@@ -41,19 +41,31 @@ compose.desktop {
         mainClass = "org.example.project.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            modules("jdk.security.auth")
+            targetFormats(
+                TargetFormat.Dmg,
+                TargetFormat.Msi,
+                TargetFormat.Deb,
+                TargetFormat.AppImage
+            )
+
+//            modules = arrayListOf(
+//                "jdk.security.auth",
+//                "java.base",
+//                "java.desktop",
+//                "java.sql",
+//                "jdk.unsupported"
+//            )
             packageName = "SplitKitCat"
             packageVersion = "1.0.0"
         }
         buildTypes.release.proguard {
-            isEnabled = true
-            obfuscate = true
-            optimize = true
-            joinOutputJars = true
-            configurationFiles.from(
-                file("proguard-rules.pro")
-            )
+            isEnabled = false
+//            obfuscate = true
+//            optimize = true
+//            joinOutputJars = true
+//            configurationFiles.from(
+//                file("proguard-rules.pro")
+//            )
         }
     }
 }
