@@ -42,21 +42,21 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(
-                TargetFormat.Dmg,
+//                TargetFormat.Dmg,
                 TargetFormat.Msi,
                 TargetFormat.Deb,
                 TargetFormat.AppImage
             )
 
-//            modules = arrayListOf(
-//                "jdk.security.auth",
-//                "java.base",
-//                "java.desktop",
-//                "java.sql",
-//                "jdk.unsupported"
-//            )
+            modules = arrayListOf(
+                "jdk.security.auth",
+                "java.base",
+                "java.desktop",
+                "java.sql",
+                "jdk.unsupported"
+            )
             packageName = "SplitKitCat"
-            packageVersion = "1.0.0"
+            packageVersion = (project.findProperty("versionName") as String?) ?: "1.0.0"
         }
         buildTypes.release.proguard {
             isEnabled = false
