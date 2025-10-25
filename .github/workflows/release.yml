@@ -52,8 +52,11 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build Deb
-        run: bash ./gradlew :composeApp:packageDeb -PversionName=${{ needs.prepare-release.outputs.release_tag }}
+        run: ./gradlew :composeApp:packageDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
@@ -75,8 +78,16 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Format version for MSI
+        id: msi_version
+        run: |
+          $full_version = "${{ needs.prepare-release.outputs.release_tag }}"
+          $base_version = $full_version.Split('-')[0]
+          echo "VERSION=$base_version" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
       - name: Build Msi
-        run: ./gradlew.bat :composeApp:packageMsi -PversionName=${{ needs.prepare-release.outputs.release_tag }}
+        run: ./gradlew.bat :composeApp:packageMsi -PversionName="${{ steps.msi_version.outputs.VERSION }}"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
