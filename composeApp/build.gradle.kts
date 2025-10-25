@@ -42,7 +42,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(
-                TargetFormat.Dmg,
+//                TargetFormat.Dmg,
                 TargetFormat.Msi,
                 TargetFormat.Deb,
                 TargetFormat.AppImage
@@ -56,7 +56,7 @@ compose.desktop {
                 "jdk.unsupported"
             )
             packageName = "SplitKitCat"
-            packageVersion = "1.0.0"
+            packageVersion = (project.findProperty("versionName") as String?) ?: "1.0.0"
         }
         buildTypes.release.proguard {
             isEnabled = false
