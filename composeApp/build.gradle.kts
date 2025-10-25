@@ -48,13 +48,13 @@ compose.desktop {
                 TargetFormat.AppImage
             )
 
-//            modules = arrayListOf(
-//                "jdk.security.auth",
-//                "java.base",
-//                "java.desktop",
-//                "java.sql",
-//                "jdk.unsupported"
-//            )
+            modules = arrayListOf(
+                "jdk.security.auth",
+                "java.base",
+                "java.desktop",
+                "java.sql",
+                "jdk.unsupported"
+            )
             packageName = "SplitKitCat"
             packageVersion = "1.0.0"
         }
