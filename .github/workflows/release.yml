@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release
+      - 20-deploying-versions
   workflow_dispatch:
 
 jobs:
@@ -20,19 +21,30 @@ jobs:
       - name: Generate Release Tag
         id: generate_tag
         run: |
-          # Generate base tag in YY.MM.DD format from a specific timezone
-          TODAY=$(TZ=Europe/Moscow date +'%y.%m.%d')
-          echo "Base tag: $TODAY"
-          
-          # Count existing tags for today to create a patch version if needed
-          EXISTING_TAGS=$(git tag -l "${TODAY}*" | wc -l)
-          echo "Found $EXISTING_TAGS tags for today."
-          
-          if [ $EXISTING_TAGS -eq 0 ]; then
-            RELEASE_TAG="$TODAY"
+          # Get year-month and day components
+          YY_MM=$(TZ=Europe/Moscow date +'%y.%m')
+          DD=$(TZ=Europe/Moscow date +'%d' | sed 's/^0*//') # Remove leading zero for shell arithmetic
+
+          # Define the build number range for today. E.g., for day 26, it's 2600-2699.
+          BUILD_START=$((DD * 100))
+          BUILD_END=$((BUILD_START + 99))
+
+          # Find the latest build number used today by filtering tags of the format YY.MM.BUILD
+          # and checking if BUILD is within today's range.
+          LATEST_BUILD_TODAY=$(git tag -l "${YY_MM}.*" | \
+            awk -F. -v start="$BUILD_START" -v end="$BUILD_END" \
+            'NF==3 && $3 ~ /^[0-9]+$/ && $3 >= start && $3 <= end {print $3}' | \
+            sort -n | tail -n 1)
+
+          # If no build exists for today, start with BUILD_START. Otherwise, increment the latest.
+          if [ -z "$LATEST_BUILD_TODAY" ]; then
+            NEW_BUILD_NUMBER=$BUILD_START
           else
-            RELEASE_TAG="${TODAY}-patch${EXISTING_TAGS}"
+            NEW_BUILD_NUMBER=$((LATEST_BUILD_TODAY + 1))
           fi
+
+          # Construct the final release tag
+          RELEASE_TAG="${YY_MM}.${NEW_BUILD_NUMBER}"
           
           echo "Generated tag: $RELEASE_TAG"
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
@@ -77,16 +89,8 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Format version for MSI
-        id: msi_version
-        run: |
-          $full_version = "${{ needs.prepare-release.outputs.release_tag }}"
-          $base_version = $full_version.Split('-')[0]
-          echo "VERSION=$base_version" >> $env:GITHUB_OUTPUT
-        shell: pwsh
-
       - name: Build Msi
-        run: ./gradlew.bat :composeApp:packageMsi -PversionName="${{ steps.msi_version.outputs.VERSION }}"
+        run: ./gradlew.bat :composeApp:packageMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
