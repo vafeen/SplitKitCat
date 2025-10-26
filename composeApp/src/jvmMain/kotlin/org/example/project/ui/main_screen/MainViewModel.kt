@@ -205,7 +205,7 @@ internal class MainViewModel(
      */
     private fun setSizeForSplitting(sizeStr: String) {
         _state.update {
-            val size = sizeStr.toIntOrNull()
+            val size = sizeStr.toLongOrNull()
             if (it is MainState.Splitting)
                 it.copy(sizeStr = sizeStr, size = size, sizeIsError = size == null)
             else it

@@ -29,7 +29,7 @@ internal sealed class MainState {
     data class Splitting(
         val fileForSplitting: FileInfo? = null,
         val sizeStr: String = "",
-        val size: Int? = null,
+        val size: Long? = null,
         val sizeIsError: Boolean = false,
         val sizeUnit: SizeUnit = SizeUnit.Bytes,
         val isSizeUnitPeekingMenuVisible: Boolean = false,
