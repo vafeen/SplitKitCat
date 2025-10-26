@@ -15,7 +15,7 @@ internal enum class SizeUnit {
      * @param value Значение для преобразования.
      * @return Значение в байтах.
      */
-    fun toBytes(value: Int): Int = when (this) {
+    fun toBytes(value: Long): Long = when (this) {
         Bytes -> value
         KiloBytes -> value * 1024
         Megabytes -> value * 1024 * 1024

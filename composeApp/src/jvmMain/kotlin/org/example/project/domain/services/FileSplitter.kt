@@ -26,7 +26,7 @@ internal interface FileSplitter {
     suspend fun splitFile(
         inputFile: File,
         outputDirPath: String,
-        chunkSize: Int
+        chunkSize: Long
     ): List<File>
 
     /**
