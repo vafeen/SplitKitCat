@@ -21,30 +21,23 @@ jobs:
       - name: Generate Release Tag
         id: generate_tag
         run: |
-          # Get year-month and day components
-          YY_MM=$(TZ=Europe/Moscow date +'%y.%m')
-          DD=$(TZ=Europe/Moscow date +'%d' | sed 's/^0*//') # Remove leading zero for shell arithmetic
+          # Get today's base tag in YY.MM.DD format
+          TODAY_BASE=$(TZ=Europe/Moscow date +'%y.%m.%d')
+          echo "Base date for tag: $TODAY_BASE"
 
-          # Define the build number range for today. E.g., for day 26, it's 2600-2699.
-          BUILD_START=$((DD * 100))
-          BUILD_END=$((BUILD_START + 99))
+          # Count how many tags already exist for today (base + patches)
+          EXISTING_TAGS_COUNT=$(git tag -l "${TODAY_BASE}*" | wc -l)
+          echo "Found $EXISTING_TAGS_COUNT existing tag(s) for today."
 
-          # Find the latest build number used today by filtering tags of the format YY.MM.BUILD
-          # and checking if BUILD is within today's range.
-          LATEST_BUILD_TODAY=$(git tag -l "${YY_MM}.*" | \
-            awk -F. -v start="$BUILD_START" -v end="$BUILD_END" \
-            'NF==3 && $3 ~ /^[0-9]+$/ && $3 >= start && $3 <= end {print $3}' | \
-            sort -n | tail -n 1)
-
-          # If no build exists for today, start with BUILD_START. Otherwise, increment the latest.
-          if [ -z "$LATEST_BUILD_TODAY" ]; then
-            NEW_BUILD_NUMBER=$BUILD_START
+          if [ $EXISTING_TAGS_COUNT -eq 0 ]; then
+            # This is the first release of the day.
+            RELEASE_TAG="$TODAY_BASE"
           else
-            NEW_BUILD_NUMBER=$((LATEST_BUILD_TODAY + 1))
+            # This is a patch release. The patch number is the count of existing tags.
+            PATCH_NUMBER=$EXISTING_TAGS_COUNT
+            FORMATTED_PATCH=$(printf "%02d" $PATCH_NUMBER)
+            RELEASE_TAG="${TODAY_BASE}${FORMATTED_PATCH}"
           fi
-
-          # Construct the final release tag
-          RELEASE_TAG="${YY_MM}.${NEW_BUILD_NUMBER}"
           
           echo "Generated tag: $RELEASE_TAG"
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
