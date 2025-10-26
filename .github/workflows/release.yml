@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release
-      - 20-deploying-versions
   workflow_dispatch:
 
 jobs:
