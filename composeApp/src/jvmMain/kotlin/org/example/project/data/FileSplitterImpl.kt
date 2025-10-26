@@ -5,6 +5,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import kotlin.math.min
 
 /**
  * Реализация интерфейса [FileSplitter] для обработки файлов.
@@ -42,31 +43,70 @@ internal class FileSplitterImpl() : FileSplitter {
     override suspend fun splitFile(
         inputFile: File,
         outputDirPath: String,
-        chunkSize: Int
+        chunkSize: Long
     ): List<File> {
+        // Создаем объект File для выходной директории.
         val outputDir = File(outputDirPath)
-        val parts = mutableListOf<File>()
-
+        // Если директория не существует, создаем ее.
         if (!outputDir.exists()) {
             outputDir.mkdirs()
         }
 
-        FileInputStream(inputFile).use { inputStream ->
-            var partNumber = 0
-            val buffer = ByteArray(chunkSize)
-            var bytesRead: Int
+        // Если размер части некорректен или исходный файл пуст, возвращаем пустой список.
+        if (chunkSize <= 0L || inputFile.length() == 0L) {
+            return emptyList()
+        }
 
-            while (inputStream.read(buffer).also { bytesRead = it } > 0) {
-                val partFile = File(
-                    outputDir,
-                    "${inputFile.name}${APP_PART_POSTFIX}$partNumber"
-                ).also { parts.add(it) }
-                FileOutputStream(partFile).use { outputStream ->
-                    outputStream.write(buffer, 0, bytesRead)
-                }
+        // Создаем изменяемый список для хранения созданных частей файла.
+        val parts = mutableListOf<File>()
+        // Создаем буфер фиксированного размера для чтения данных. Это позволяет избежать проблем с памятью.
+        val buffer = ByteArray(8 * 1024) // Use a fixed-size buffer
+        // Инициализируем счетчик для нумерации частей файла.
+        var partNumber = 0
+        // Инициализируем счетчик общего количества прочитанных байт из исходного файла.
+        var totalBytesRead: Long = 0
+
+        // Открываем FileInputStream для исходного файла. `use` гарантирует автоматическое закрытие потока.
+        FileInputStream(inputFile).use { inputStream ->
+            // Запускаем цикл, который будет выполняться, пока не будут прочитаны все байты исходного файла.
+            while (totalBytesRead < inputFile.length()) {
+                // Создаем файл для очередной части с уникальным именем.
+                val partFile = File(outputDir, "${inputFile.name}${APP_PART_POSTFIX}$partNumber")
+                // Добавляем созданный файл в список частей.
+                parts.add(partFile)
+                // Увеличиваем номер части для следующей итерации.
                 partNumber++
+
+                // Открываем FileOutputStream для записи в текущую часть файла. `use` также закроет поток автоматически.
+                FileOutputStream(partFile).use { outputStream ->
+                    // Определяем, сколько байт нужно записать в эту часть. Это либо полный `chunkSize`, либо остаток файла.
+                    val bytesForThisPart = min(chunkSize, inputFile.length() - totalBytesRead)
+                    // Инициализируем счетчик байт, записанных в текущую часть.
+                    var bytesWrittenForPart: Long = 0
+
+                    // Запускаем вложенный цикл, который выполняется, пока текущая часть не будет заполнена.
+                    while (bytesWrittenForPart < bytesForThisPart) {
+                        // Определяем, сколько байт нужно прочитать за одну итерацию. Это минимум из размера буфера и остатка для текущей части.
+                        val toRead = min(
+                            buffer.size.toLong(),
+                            bytesForThisPart - bytesWrittenForPart
+                        ).toInt()
+                        // Читаем байты из исходного файла в буфер.
+                        val bytesRead = inputStream.read(buffer, 0, toRead)
+                        // Если достигнут конец файла, прерываем цикл.
+                        if (bytesRead == -1) break
+
+                        // Записываем прочитанные байты из буфера в файл текущей части.
+                        outputStream.write(buffer, 0, bytesRead)
+                        // Увеличиваем счетчик записанных в эту часть байт.
+                        bytesWrittenForPart += bytesRead
+                    }
+                    // Увеличиваем общий счетчик прочитанных байт на количество байт, записанных в последнюю часть.
+                    totalBytesRead += bytesWrittenForPart
+                }
             }
         }
+        // Возвращаем список созданных файлов-частей.
         return parts
     }
 
