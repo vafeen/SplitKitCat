@@ -72,14 +72,18 @@ jobs:
         run: |
           tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
 
+      - name: Stage Ubuntu artifacts
+        run: |
+          mkdir ubuntu-artifacts
+          cp composeApp/build/compose/binaries/main-release/deb/*.deb ubuntu-artifacts/
+          cp composeApp/build/compose/binaries/main-release/app/*.tar.gz ubuntu-artifacts/
+          cp composeApp/build/libs/*.jar ubuntu-artifacts/
+
       - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-artifacts
-          path: |
-            composeApp/build/compose/binaries/main-release/deb/*.deb
-            composeApp/build/compose/binaries/main-release/app/*.tar.gz
-            composeApp/build/libs/*.jar
+          path: ubuntu-artifacts/
 
   build-fedora:
     needs: prepare-release

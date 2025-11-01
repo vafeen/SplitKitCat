@@ -74,7 +74,7 @@ tasks.register<Jar>("fatJar") {
     manifest {
         attributes["Main-Class"] = "org.example.project.MainKt"
     }
-    archiveBaseName.set("SplitKitCat-fat")
+//    archiveBaseName.set("SplitKitCat-fat")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(kotlin.targets.getByName("jvm").compilations.getByName("main").output)
     from({
