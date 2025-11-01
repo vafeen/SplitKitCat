@@ -94,6 +94,9 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Install RPM build tools
+        run: dnf install -y rpm-build
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
