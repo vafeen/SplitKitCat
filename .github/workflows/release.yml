@@ -70,7 +70,7 @@ jobs:
 
       - name: Archive AppImage
         run: |
-          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz composeApp/build/compose/binaries/main-release/app/SplitKitCat
+          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
 
       - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
