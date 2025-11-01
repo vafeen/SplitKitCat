@@ -69,10 +69,10 @@ jobs:
         run: |
           tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
 
-      - name: Upload Linux artifact
+      - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-artifacts
+          name: ubuntu-artifacts
           path: |
             composeApp/build/compose/binaries/main-release/deb/*.deb
             composeApp/build/compose/binaries/main-release/app/*.tar.gz
@@ -159,8 +159,8 @@ jobs:
           name: ${{ needs.prepare-release.outputs.release_tag }}
           body: ""
           files: |
-            artifacts/linux-artifacts/*.deb
-            artifacts/linux-artifacts/*.tar.gz
-            artifacts/linux-artifacts/*.jar
+            artifacts/ubuntu-artifacts/*.deb
+            artifacts/ubuntu-artifacts/*.tar.gz
+            artifacts/ubuntu-artifacts/*.jar
             artifacts/fedora-artifacts/*.rpm
             artifacts/windows-artifacts/*.msi
