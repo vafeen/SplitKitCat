@@ -42,7 +42,7 @@ jobs:
           echo "Generated tag: $RELEASE_TAG"
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
-  build-linux:
+  build-ubuntu:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
@@ -133,7 +133,7 @@ jobs:
           path: composeApp/build/compose/binaries/main-release/msi/*.msi
 
   release:
-    needs: [ prepare-release, build-linux, build-fedora, build-windows ]
+    needs: [ prepare-release, build-ubuntu, build-fedora, build-windows ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
