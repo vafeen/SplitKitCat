@@ -61,8 +61,8 @@ jobs:
 
       - name: Build AppImage, Deb and Jar
         run: |
-          ./gradlew :composeApp:packageAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
-          ./gradlew :composeApp:packageDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:packageReleaseAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:packageReleaseDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
           ./gradlew :composeApp:fatJar -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
       - name: Archive AppImage
@@ -98,7 +98,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Rpm
-        run: ./gradlew :composeApp:packageRpm -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+        run: ./gradlew :composeApp:packageReleaseRpm -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
       - name: Upload Fedora artifact
         uses: actions/upload-artifact@v4
@@ -121,7 +121,7 @@ jobs:
           cache: 'gradle'
 
       - name: Build Msi
-        run: ./gradlew.bat :composeApp:packageMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+        run: ./gradlew.bat :composeApp:packageReleaseMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
