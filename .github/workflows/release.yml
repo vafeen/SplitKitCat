@@ -130,14 +130,32 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Build Msi
-        run: ./gradlew.bat :composeApp:packageReleaseMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+      - name: Build MSI and portable app directory
+        run: |
+          ./gradlew.bat :composeApp:packageReleaseMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew.bat :composeApp:packageReleaseAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $version = "${{ needs.prepare-release.outputs.release_tag }}"
+          $sourceDir = "composeApp\build\compose\binaries\main-release\app\SplitKitCat"
+          $zipName = "SplitKitCat-${version}-portable.zip"
+          if (Test-Path $sourceDir) {
+            Compress-Archive -Path $sourceDir -DestinationPath $zipName -Force
+            Move-Item -Path $zipName -Destination "composeApp/build/compose/binaries/main-release/msi/"
+          } else {
+            Write-Error "Portable app directory not found: $sourceDir"
+            exit 1
+          }
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: composeApp/build/compose/binaries/main-release/msi/*.msi
+          path: |
+            composeApp/build/compose/binaries/main-release/msi/*.msi
+            composeApp/build/compose/binaries/main-release/msi/*.zip
 
   release:
     needs: [ prepare-release, build-ubuntu, build-fedora, build-windows ]
@@ -171,3 +189,4 @@ jobs:
             artifacts/ubuntu-artifacts/*.jar
             artifacts/fedora-artifacts/*.rpm
             artifacts/windows-artifacts/*.msi
+            artifacts/windows-artifacts/*.zip
