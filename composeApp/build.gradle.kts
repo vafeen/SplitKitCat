@@ -42,10 +42,10 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(
-//                TargetFormat.Dmg,
-                TargetFormat.Msi,
+                TargetFormat.AppImage,
                 TargetFormat.Deb,
-                TargetFormat.AppImage
+                TargetFormat.Rpm,
+                TargetFormat.Msi
             )
 
             modules = arrayListOf(
@@ -68,4 +68,17 @@ compose.desktop {
 //            )
         }
     }
+}
+
+tasks.register<Jar>("fatJar") {
+    manifest {
+        attributes["Main-Class"] = "org.example.project.MainKt"
+    }
+//    archiveBaseName.set("SplitKitCat-fat")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(kotlin.targets.getByName("jvm").compilations.getByName("main").output)
+    from({
+        configurations.getByName("jvmRuntimeClasspath")
+            .map { if (it.isDirectory) it else zipTree(it) }
+    })
 }

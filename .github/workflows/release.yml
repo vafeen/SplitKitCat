@@ -41,7 +41,7 @@ jobs:
           echo "Generated tag: $RELEASE_TAG"
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
-  build-linux:
+  build-ubuntu:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
@@ -55,17 +55,65 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Install Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y fakeroot libfuse2
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Deb
-        run: ./gradlew :composeApp:packageDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+      - name: Build AppImage, Deb and Jar
+        run: |
+          ./gradlew :composeApp:packageReleaseAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:packageReleaseDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:fatJar -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
 
-      - name: Upload Linux artifact
+      - name: Archive AppImage
+        run: |
+          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
+
+      - name: Stage Ubuntu artifacts
+        run: |
+          mkdir ubuntu-artifacts
+          cp composeApp/build/compose/binaries/main-release/deb/*.deb ubuntu-artifacts/
+          cp composeApp/build/compose/binaries/main-release/app/*.tar.gz ubuntu-artifacts/
+          cp composeApp/build/libs/composeApp.jar ubuntu-artifacts/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.jar
+
+      - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-artifacts
-          path: composeApp/build/compose/binaries/main/deb/*.deb
+          name: ubuntu-artifacts
+          path: ubuntu-artifacts/
+
+  build-fedora:
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Install RPM build tools
+        run: dnf install -y rpm-build
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Rpm
+        run: ./gradlew :composeApp:packageReleaseRpm -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+
+      - name: Upload Fedora artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-artifacts
+          path: composeApp/build/compose/binaries/main-release/rpm/*.rpm
 
   build-windows:
     needs: prepare-release
@@ -81,17 +129,35 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Build Msi
-        run: ./gradlew.bat :composeApp:packageMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+      - name: Build MSI and portable app directory
+        run: |
+          ./gradlew.bat :composeApp:packageReleaseMsi -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew.bat :composeApp:packageReleaseAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: |
+          $version = "${{ needs.prepare-release.outputs.release_tag }}"
+          $sourceDir = "composeApp\build\compose\binaries\main-release\app\SplitKitCat"
+          $zipName = "SplitKitCat-${version}-portable.zip"
+          if (Test-Path $sourceDir) {
+            Compress-Archive -Path $sourceDir -DestinationPath $zipName -Force
+            Move-Item -Path $zipName -Destination "composeApp/build/compose/binaries/main-release/msi/"
+          } else {
+            Write-Error "Portable app directory not found: $sourceDir"
+            exit 1
+          }
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: composeApp/build/compose/binaries/main/msi/*.msi
+          path: |
+            composeApp/build/compose/binaries/main-release/msi/*.msi
+            composeApp/build/compose/binaries/main-release/msi/*.zip
 
   release:
-    needs: [ prepare-release, build-linux, build-windows ]
+    needs: [ prepare-release, build-ubuntu, build-fedora, build-windows ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -117,5 +183,9 @@ jobs:
           name: ${{ needs.prepare-release.outputs.release_tag }}
           body: ""
           files: |
-            artifacts/linux-artifacts/*.deb
+            artifacts/ubuntu-artifacts/*.deb
+            artifacts/ubuntu-artifacts/*.tar.gz
+            artifacts/ubuntu-artifacts/*.jar
+            artifacts/fedora-artifacts/*.rpm
             artifacts/windows-artifacts/*.msi
+            artifacts/windows-artifacts/*.zip
