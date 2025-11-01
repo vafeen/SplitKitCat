@@ -56,6 +56,9 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Install Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y fakeroot libfuse2
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -67,7 +70,7 @@ jobs:
 
       - name: Archive AppImage
         run: |
-          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
+          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz composeApp/build/compose/binaries/main-release/app/SplitKitCat
 
       - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
