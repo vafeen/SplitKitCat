@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release
-      - 23-add-rpm-appimage
   workflow_dispatch:
 
 jobs:
