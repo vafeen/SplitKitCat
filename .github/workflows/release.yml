@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release
+      - 23-add-rpm-appimage
   workflow_dispatch:
 
 jobs:
@@ -39,7 +40,7 @@ jobs:
           fi
           
           echo "Generated tag: $RELEASE_TAG"
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "RELEASE_TAG=$GITHUB_OUTPUT"
 
   build-linux:
     needs: prepare-release
@@ -58,14 +59,48 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Deb
-        run: ./gradlew :composeApp:packageDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+      - name: Build AppImage, Deb and Jar
+        run: |
+          ./gradlew :composeApp:packageAppImage -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:packageDeb -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+          ./gradlew :composeApp:fatJar -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+
+      - name: Archive AppImage
+        run: |
+          tar -czvf composeApp/build/compose/binaries/main-release/app/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.tar.gz -C composeApp/build/compose/binaries/main-release/app SplitKitCat
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-artifacts
-          path: composeApp/build/compose/binaries/main/deb/*.deb
+          path: |
+            composeApp/build/compose/binaries/main-release/deb/*.deb
+            composeApp/build/compose/binaries/main-release/app/*.tar.gz
+            composeApp/build/libs/*.jar
+
+  build-fedora:
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - name: Install dependencies
+        run: dnf install -y java-17-openjdk-devel
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Rpm
+        run: ./gradlew :composeApp:packageRpm -PversionName="${{ needs.prepare-release.outputs.release_tag }}"
+
+      - name: Upload Fedora artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-artifacts
+          path: composeApp/build/compose/binaries/main-release/rpm/*.rpm
 
   build-windows:
     needs: prepare-release
@@ -88,10 +123,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: composeApp/build/compose/binaries/main/msi/*.msi
+          path: composeApp/build/compose/binaries/main-release/msi/*.msi
 
   release:
-    needs: [ prepare-release, build-linux, build-windows ]
+    needs: [ prepare-release, build-linux, build-fedora, build-windows ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,4 +153,7 @@ jobs:
           body: ""
           files: |
             artifacts/linux-artifacts/*.deb
+            artifacts/linux-artifacts/*.tar.gz
+            artifacts/linux-artifacts/*.jar
+            artifacts/fedora-artifacts/*.rpm
             artifacts/windows-artifacts/*.msi
