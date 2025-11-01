@@ -77,7 +77,7 @@ jobs:
           mkdir ubuntu-artifacts
           cp composeApp/build/compose/binaries/main-release/deb/*.deb ubuntu-artifacts/
           cp composeApp/build/compose/binaries/main-release/app/*.tar.gz ubuntu-artifacts/
-          cp composeApp/build/libs/composeApp.jar ubuntu-artifacts/SplitKitCat.jar
+          cp composeApp/build/libs/composeApp.jar ubuntu-artifacts/SplitKitCat-${{ needs.prepare-release.outputs.release_tag }}.jar
 
       - name: Upload Ubuntu artifact
         uses: actions/upload-artifact@v4
