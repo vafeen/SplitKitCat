@@ -1,9 +1,11 @@
 package org.example.project.data.di
 
 import org.example.project.data.ConfigHandlerImpl
+import org.example.project.data.FileHasherImpl
 import org.example.project.data.FilePeekerImpl
 import org.example.project.data.FileSplitterImpl
 import org.example.project.domain.services.ConfigHandler
+import org.example.project.domain.services.FileHasher
 import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
 import org.koin.core.module.dsl.bind
@@ -20,5 +22,8 @@ internal val KoinDataModule = module {
     }
     factoryOf(::ConfigHandlerImpl) {
         bind<ConfigHandler>()
+    }
+    factoryOf(::FileHasherImpl) {
+        bind<FileHasher>()
     }
 }

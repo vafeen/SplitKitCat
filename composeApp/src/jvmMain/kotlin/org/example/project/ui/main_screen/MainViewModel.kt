@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import org.example.project.domain.models.Config
 import org.example.project.domain.models.SizeUnit
 import org.example.project.domain.services.ConfigHandler
+import org.example.project.domain.services.FileHasher
 import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
 import java.io.File
@@ -24,6 +25,7 @@ import java.io.File
  */
 internal class MainViewModel(
     private val fileSplitter: FileSplitter,
+    private val fileHasher: FileHasher,
     private val filePeeker: FilePeeker,
     private val configHandler: ConfigHandler
 ) : ViewModel() {
@@ -60,21 +62,26 @@ internal class MainViewModel(
      * Выполняет объединение файлов на основе выбранной конфигурации.
      */
     private suspend fun cat() {
-        val state = _state.value as? MainState.Catting ?: return
+        var state = _state.value as? MainState.Catting ?: return
         val config = state.config ?: return
         val configFile = state.configFile ?: return
         val mainFile = config.mainFile
-        _state.update { state.copy(isLoading = true) }
+        state = state.copy(isLoading = true)
+        _state.update { state }
         val outputFile = filePeeker.peekFileForSaving(
             suggestedName = config.mainFile.name,
             extension = File(mainFile.name).extension
-        )?.file ?: return
-        delay(2000)
+        ) ?: return
+        delay(5000)
         fileSplitter.catFiles(
             partsDir = File(configFile.parent),
             outputFile = outputFile, baseFileName = mainFile.name
         )
-        _state.update { state.copy(isLoading = false) }
+        val hash = fileHasher.sha256sum(outputFile)
+        state = state.copy(isMainFileHashTrue = hash == config.mainFile.hash)
+        _state.update { state }
+        state = state.copy(isLoading = false)
+        _state.update { state }
     }
 
     /**
@@ -82,12 +89,12 @@ internal class MainViewModel(
      */
     private suspend fun selectConfigForCatting() {
         val configFile = filePeeker.peekConfig() ?: return
-        val config = configHandler.readConfig(configFile.file) ?: return // TODO(add showing error)
+        val config = configHandler.readConfig(configFile) ?: return // TODO(add showing error)
 
         _state.update {
             if (it is MainState.Catting) it.copy(
                 config = config,
-                configFile = configFile.file
+                configFile = configFile
             ) else it
         }
         checkFilesInConfig()
@@ -114,12 +121,13 @@ internal class MainViewModel(
                 )
             )
             _state.update { state }
-            delay(500)
+//            delay(500)
             state = state.copy(
                 hashIsTrue = state.hashIsTrue.plus(
-                    partFile.hash to if (exists) partFile.hash == fileSplitter.sha256sum(
-                        fileSystemFile
-                    ) else false
+                    partFile.hash to
+                            if (exists)
+                                partFile.hash == fileHasher.sha256sum(fileSystemFile)
+                            else false
                 )
             )
             _state.update { state }
@@ -155,20 +163,21 @@ internal class MainViewModel(
             _state.update {
                 if (it is MainState.Splitting) it.copy(isLoading = true) else it
             }
+
             val configFileForSaving = filePeeker.peekFileForSaving(
-                suggestedName = fileForSplitting.file.nameWithoutExtension,
+                suggestedName = fileForSplitting.nameWithoutExtension,
                 extension = Config.Extension
             ) ?: return
-            val partFileNames = fileSplitter.splitFile(
-                inputFile = fileForSplitting.file,
-                outputDirPath = configFileForSaving.file.parent,
+            val fileParts = fileSplitter.splitFile(
+                inputFile = fileForSplitting,
+                outputDirPath = configFileForSaving.parent,
                 chunkSize = sizeUnit.toBytes(size)
             )
 
             configHandler.writeConfig(
-                file = configFileForSaving.file,
-                mainFile = fileForSplitting.file,
-                fileParts = partFileNames,
+                file = configFileForSaving,
+                mainFile = fileForSplitting,
+                fileParts = fileParts,
             )
 //            delay(5000)
             _state.update {

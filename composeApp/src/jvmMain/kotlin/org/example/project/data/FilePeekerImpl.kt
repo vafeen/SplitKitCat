@@ -5,11 +5,9 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.dialogs.openFileSaver
-import io.github.vinceglb.filekit.name
-import io.github.vinceglb.filekit.size
 import org.example.project.domain.models.Config
-import org.example.project.domain.models.FileInfo
 import org.example.project.domain.services.FilePeeker
+import java.io.File
 
 /**
  * Реализация интерфейса [FilePeeker] для выбора файлов с использованием системного диалога.
@@ -21,23 +19,19 @@ internal class FilePeekerImpl : FilePeeker {
      *
      * @return Объект [FileInfo], представляющий выбранный файл, или null, если выбор был отменен.
      */
-    override suspend fun peekFile(): FileInfo? = FileKit.openFilePicker(
+    override suspend fun peekFile(): File? = FileKit.openFilePicker(
         mode = FileKitMode.Single,
-    )?.let {
-        FileInfo(name = it.name, file = it.file, size = it.size())
-    }
+    )?.file
 
     /**
      * Открывает системный диалог для выбора файла конфигурации.
      *
      * @return Объект [FileInfo], представляющий выбранный файл конфигурации, или null, если выбор был отменен.
      */
-    override suspend fun peekConfig(): FileInfo? = FileKit.openFilePicker(
+    override suspend fun peekConfig(): File? = FileKit.openFilePicker(
         mode = FileKitMode.Single,
         type = FileKitType.File(extension = Config.Extension)
-    )?.let {
-        FileInfo(name = it.name, file = it.file, size = it.size())
-    }
+    )?.file
 
     /**
      * Открывает системный диалог для сохранения файла.
@@ -49,10 +43,8 @@ internal class FilePeekerImpl : FilePeeker {
     override suspend fun peekFileForSaving(
         suggestedName: String,
         extension: String?,
-    ): FileInfo? = FileKit.openFileSaver(
+    ): File? = FileKit.openFileSaver(
         suggestedName = suggestedName,
         extension = extension,
-    )?.let {
-        FileInfo(name = it.name, file = it.file, size = it.size())
-    }
+    )?.file
 }

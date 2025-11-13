@@ -4,7 +4,6 @@ import org.example.project.domain.services.FileSplitter
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.security.MessageDigest
 import kotlin.math.min
 
 /**
@@ -12,25 +11,9 @@ import kotlin.math.min
  * @see FileSplitter
  */
 internal class FileSplitterImpl() : FileSplitter {
-    /**
-     * Вычисляет контрольную сумму SHA-256 для указанного файла.
-     *
-     * @param file Файл, для которого необходимо вычислить контрольную сумму.
-     * @return Строковое представление контрольной суммы SHA-256 в шестнадцатеричном формате.
-     * @throws Exception если файл не существует.
-     */
-    override fun sha256sum(file: File): String {
-        if (!file.exists()) throw Exception("File ${file.name} is not exists in FileSplitterImpl.sha256sum")
-        val digest = MessageDigest.getInstance("SHA-256")
-        FileInputStream(file).use { fis ->
-            val buffer = ByteArray(1024 * 8)
-            var bytesRead: Int
-            while (fis.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
-            }
-        }
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
+    private val chunkManager = ChunkManager()
+
+
 
     /**
      * Разбивает файл на несколько частей заданного размера.
@@ -56,27 +39,20 @@ internal class FileSplitterImpl() : FileSplitter {
         if (chunkSize <= 0L || inputFile.length() == 0L) {
             return emptyList()
         }
+        val parts = chunkManager.getPostfixes(inputFile.length(), chunkSize).map {
+            File(outputDir, "${inputFile.name}${APP_PART_POSTFIX}_$it")
+        }
 
-        // Создаем изменяемый список для хранения созданных частей файла.
-        val parts = mutableListOf<File>()
         // Создаем буфер фиксированного размера для чтения данных. Это позволяет избежать проблем с памятью.
         val buffer = ByteArray(8 * 1024) // Use a fixed-size buffer
-        // Инициализируем счетчик для нумерации частей файла.
-        var partNumber = 0
+
         // Инициализируем счетчик общего количества прочитанных байт из исходного файла.
         var totalBytesRead: Long = 0
 
         // Открываем FileInputStream для исходного файла. `use` гарантирует автоматическое закрытие потока.
         FileInputStream(inputFile).use { inputStream ->
             // Запускаем цикл, который будет выполняться, пока не будут прочитаны все байты исходного файла.
-            while (totalBytesRead < inputFile.length()) {
-                // Создаем файл для очередной части с уникальным именем.
-                val partFile = File(outputDir, "${inputFile.name}${APP_PART_POSTFIX}$partNumber")
-                // Добавляем созданный файл в список частей.
-                parts.add(partFile)
-                // Увеличиваем номер части для следующей итерации.
-                partNumber++
-
+            parts.forEach { partFile ->
                 // Открываем FileOutputStream для записи в текущую часть файла. `use` также закроет поток автоматически.
                 FileOutputStream(partFile).use { outputStream ->
                     // Определяем, сколько байт нужно записать в эту часть. Это либо полный `chunkSize`, либо остаток файла.
@@ -135,6 +111,7 @@ internal class FileSplitterImpl() : FileSplitter {
             }
         }
     }
+
 
     /**
      * Компаньон-объект для [FileSplitterImpl].

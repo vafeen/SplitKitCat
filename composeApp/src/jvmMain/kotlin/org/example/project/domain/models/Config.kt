@@ -10,8 +10,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class Config(
-    val mainFile: File,
-    val parts: List<File>,
+    val mainFile: FileInfo,
+    val parts: List<FileInfo>,
 ) {
     /**
      * Представляет информацию о файле (основном или части) в конфигурации.
@@ -20,7 +20,7 @@ internal data class Config(
      * @property hash Контрольная сумма SHA-256 файла.
      */
     @Serializable
-    data class File(
+    data class FileInfo(
         val name: String,
         val hash: String,
     )
