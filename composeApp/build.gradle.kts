@@ -29,7 +29,12 @@ kotlin {
             implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
+            // Для создания cross-platform fatJar нам нужны все нативные библиотеки
+            // implementation(compose.desktop.currentOs)
+            implementation(compose.desktop.windows_x64)
+            implementation(compose.desktop.linux_x64)
+            implementation(compose.desktop.macos_x64)
+            implementation(compose.desktop.macos_arm64)
             implementation(libs.kotlinx.coroutinesSwing)
         }
     }
