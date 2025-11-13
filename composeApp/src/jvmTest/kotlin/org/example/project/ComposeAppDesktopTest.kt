@@ -1,12 +1,14 @@
 package org.example.project
 
+import org.example.project.data.ChunkManager
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ComposeAppDesktopTest {
+    private val chunkManager = ChunkManager()
 
     @Test
     fun example() {
-        assertEquals(3, 1 + 2)
+        val postfixes = chunkManager.getPostfixes(100000, 100)
+        println(postfixes.joinToString())
     }
 }
