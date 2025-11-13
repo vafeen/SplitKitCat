@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import org.example.project.domain.models.Config
 import org.example.project.domain.models.SizeUnit
 import org.example.project.domain.services.ConfigHandler
+import org.example.project.domain.services.FileHasher
 import org.example.project.domain.services.FilePeeker
 import org.example.project.domain.services.FileSplitter
 import java.io.File
@@ -24,6 +25,7 @@ import java.io.File
  */
 internal class MainViewModel(
     private val fileSplitter: FileSplitter,
+    private val fileHasher: FileHasher,
     private val filePeeker: FilePeeker,
     private val configHandler: ConfigHandler
 ) : ViewModel() {
@@ -117,9 +119,10 @@ internal class MainViewModel(
             delay(500)
             state = state.copy(
                 hashIsTrue = state.hashIsTrue.plus(
-                    partFile.hash to if (exists) partFile.hash == fileSplitter.sha256sum(
-                        fileSystemFile
-                    ) else false
+                    partFile.hash to
+                            if (exists)
+                                partFile.hash == fileHasher.sha256sum(fileSystemFile)
+                            else false
                 )
             )
             _state.update { state }

@@ -4,7 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.example.project.domain.models.Config
 import org.example.project.domain.services.ConfigHandler
-import org.example.project.domain.services.FileSplitter
+import org.example.project.domain.services.FileHasher
 import java.io.File
 
 /**
@@ -13,7 +13,7 @@ import java.io.File
  * @see ConfigHandler
  */
 internal class ConfigHandlerImpl(
-    private val fileSplitter: FileSplitter,
+    private val fileHasher: FileHasher
 ) : ConfigHandler {
     /**
      * Асинхронно считывает конфигурацию из указанного файла.
@@ -42,7 +42,6 @@ internal class ConfigHandlerImpl(
         file.writeText(jsonString)
         return true
     }
-
     /**
      * Считывает файл и создает для него объект [Config.File] с хешем.
      *
@@ -50,5 +49,5 @@ internal class ConfigHandlerImpl(
      * @return Объект [Config.File].
      */
     private fun readFileAndCreateConfigFile(file: File): Config.File =
-        Config.File(name = file.name, hash = fileSplitter.sha256sum(file))
+        Config.File(name = file.name, hash = fileHasher.sha256sum(file))
 }
