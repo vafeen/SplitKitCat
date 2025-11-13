@@ -1,7 +1,6 @@
 package org.example.project.ui.main_screen
 
 import org.example.project.domain.models.Config
-import org.example.project.domain.models.FileInfo
 import org.example.project.domain.models.SizeUnit
 import java.io.File
 
@@ -27,7 +26,7 @@ internal sealed class MainState {
      * @property isSplittingAvailable true, если можно начать разделение.
      */
     data class Splitting(
-        val fileForSplitting: FileInfo? = null,
+        val fileForSplitting: File? = null,
         val sizeStr: String = "",
         val size: Long? = null,
         val sizeIsError: Boolean = false,
@@ -49,6 +48,8 @@ internal sealed class MainState {
      * @property isLoading true, если идет процесс объединения.
      */
     data class Catting(
+        val mainFile: File? = null,
+        val isMainFileHashTrue: Boolean? = null,
         val config: Config? = null,
         val configFile: File? = null,
         val foundParts: Map<String, Boolean> = mapOf(),

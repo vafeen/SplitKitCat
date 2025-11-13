@@ -43,11 +43,11 @@ internal class ConfigHandlerImpl(
         return true
     }
     /**
-     * Считывает файл и создает для него объект [Config.File] с хешем.
+     * Считывает файл и создает для него объект [Config.FileInfo] с хешем.
      *
      * @param file Файл для обработки.
-     * @return Объект [Config.File].
+     * @return Объект [Config.FileInfo].
      */
-    private fun readFileAndCreateConfigFile(file: File): Config.File =
-        Config.File(name = file.name, hash = fileHasher.sha256sum(file))
+    private fun readFileAndCreateConfigFile(file: File): Config.FileInfo =
+        Config.FileInfo(name = file.name, hash = fileHasher.sha256sum(file))
 }

@@ -1,6 +1,6 @@
 package org.example.project.domain.services
 
-import org.example.project.domain.models.FileInfo
+import java.io.File
 
 /**
  * Интерфейс для выбора файлов в файловой системе.
@@ -11,14 +11,14 @@ internal interface FilePeeker {
      *
      * @return [FileInfo] выбранного файла или null, если выбор был отменен.
      */
-    suspend fun peekFile(): FileInfo?
+    suspend fun peekFile(): File?
 
     /**
      * Асинхронно открывает диалог для выбора файла конфигурации.
      *
      * @return [FileInfo] выбранного файла конфигурации или null, если выбор был отменен.
      */
-    suspend fun peekConfig(): FileInfo?
+    suspend fun peekConfig(): File?
 
     /**
      * Асинхронно открывает диалог для сохранения файла.
@@ -30,5 +30,5 @@ internal interface FilePeeker {
     suspend fun peekFileForSaving(
         suggestedName: String,
         extension: String?,
-    ): FileInfo?
+    ): File?
 }

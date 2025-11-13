@@ -117,7 +117,11 @@ internal fun Catting(
                     modifier = Modifier.fillMaxSize().alpha(if (state.isLoading) 0.5f else 1.0f)
                 ) {
                     item {
-                        File(config.mainFile)
+                        File(
+                            fileInfo = config.mainFile,
+                            hashIsTrue = state.isMainFileHashTrue
+                        )
+
                         Spacer(modifier = Modifier.height(10.dp))
                     }
                     items(config.parts) {
@@ -148,12 +152,12 @@ internal fun Catting(
 /**
  * Composable-функция для отображения информации о файле.
  *
- * @param file Информация о файле.
+ * @param fileInfo Информация о файле.
  * @param found `true`, если файл найден, `false`, если нет, и `null`, если проверка не проводилась.
  * @param hashIsTrue `true`, если хеш файла верен, `false`, если нет, и `null`, если проверка не проводилась.
  */
 @Composable
-internal fun File(file: Config.File, found: Boolean? = null, hashIsTrue: Boolean? = null) {
+internal fun File(fileInfo: Config.FileInfo, found: Boolean? = null, hashIsTrue: Boolean? = null) {
     Row(
         modifier = Modifier
             .border(BorderStroke(2.dp, Color.Black))
@@ -188,8 +192,8 @@ internal fun File(file: Config.File, found: Boolean? = null, hashIsTrue: Boolean
             }
         }
         Column {
-            Text(file.name)
-            Text(file.hash)
+            Text(fileInfo.name)
+            Text(fileInfo.hash)
         }
     }
 }
@@ -211,7 +215,7 @@ internal fun Splitting(
     )
     Text(
         "Size: ${
-            state.fileForSplitting?.size?.let { size ->
+            state.fileForSplitting?.length()?.let { size ->
                 splitSizeToUnits(size).joinToString(separator = ", ") {
                     "${it.first} ${it.second}"
                 }
